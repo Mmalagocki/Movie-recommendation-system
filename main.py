@@ -67,14 +67,12 @@ def get_movie(movieid):
     else:
         raise ValueError('Nie ma takiego id (:')
 
+def get_movies_similarity(dataframe):
+    new = dataframe[['genres', 'popularity', 'vote_average']].copy()
+    print(new)
+
 
 ########################### MAIN ###########################
-
-
-# my_columns = ['adult', 'id', 'original_title', 'popularity', 'video']
-# df = pd.read_csv("result.csv", usecols=my_columns, sep=';')
-# for line in df:
-#     print(df)
 
 train_columns = ['id', 'userid', 'movieid', 'rating']
 users_db = read_csv("users.csv", train_columns)
@@ -82,45 +80,13 @@ users_db = read_csv("users.csv", train_columns)
 movie_columns = ['id', 'tmdb', 'title']
 movies_db = read_csv("movies.csv", movie_columns)
 
-
-# watched_movies = []
-# for index, line in users_db.iterrows():
-#     print(index)
-#     watched_movies.append(get_movie(line.movieid))
-#
-# with open('data.json', 'w') as outfile:
-#     json.dump(watched_movies, outfile, indent=2)
-
 f = open('data.json')
-df = json.load(f)
-# print(df)
-# print(type(df))
-# for line in df['adult']:
-#     print(type(line))
-#     print(line)
-dataframe = pd.DataFrame.from_dict(df)
-print(dataframe)
-for line in dataframe.vote_count:
-    print(line)
-# for isadult in df['adult']:
-#     print(isadult)
-# for line in df:
-#     print(line)
+dictionary = json.load(f)
 
-# df = json.loads(watched_movies)
-# df.to_csv("movies_matrix.csv", sep=';')
-# np.savetxt("foo.csv", watched_movies, delimiter=";")
+df = pd.DataFrame.from_dict(dictionary)
+df.sort_values("imdb_id", inplace = True)
+df = df.drop_duplicates(subset=['imdb_id'])
 
-#get_movie_id(movies_db, users_db)
-# file_name = "task.csv"
-# file = open(file_name, "r")
-# array = create_rating(file)
+get_movies_similarity(df)
 
 
-
-# filter_values(df)
-# array = create_rating(file)
-# for line in array:
-#     showing
-#     print(line)
-# print('Finished working')
