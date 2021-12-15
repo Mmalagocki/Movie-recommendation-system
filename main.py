@@ -92,8 +92,7 @@ def get_movie_genres(dataframe):
 def get_similarity(movies_array, movie_to_compare, genres_list):
     k = 5
     dist_array = []
-    print(movies_array.average_rating)
-    print(movie_to_compare.average_rating)
+
 
     # genres
     # popularity
@@ -103,7 +102,7 @@ def get_similarity(movies_array, movie_to_compare, genres_list):
         for index, movie_from_array in movies_array.iterrows():
             dist = math.sqrt(
                 0.001 * math.pow((elem.popularity - movie_from_array.popularity), 2) +
-                0.01 * math.pow((elem.average_rating - movie_from_array.average_rating), 2) +
+                0.01 * math.pow((elem.vote_average - movie_from_array.vote_average), 2) +
                 math.pow(sum(
                             abs(
                                 np.subtract(genres_dist(movie_from_array.genres, genres_list),
@@ -166,25 +165,6 @@ def get_recommended_movie(new_watched_movie, users_db, movies_df, movies_genres_
     previously_watched_movies_df = pd.DataFrame(previously_watched_movies, columns=['genres', 'popularity', 'vote_average'])
     previously_watched_movies_df['rating'] = rating_df['rating'].to_numpy()
     genres_list = get_movie_genres(movies_genres_df.genres)
-    # movies_array = []
-    # new_movie = []
-    # i = 0
-    # for index, elem in new.iterrows():
-    #     print(elem)
-    #     if i == 0:
-    #         new_movie.append((elem.genres, elem.popularity, elem.vote_average))
-    #         # first_movie.append(elem.genres)
-    #         # first_movie.append(elem.popularity)
-    #         # first_movie.append(elem.vote_average)
-    #         print(new_movie)
-    #         # new_movie_df = pd.DataFrame(new_movie, columns=['genres', 'popularity', 'average_rating'])
-    #         i += 1
-    #     else:
-    #         sumaaa =1
-    #         # movies_array.append((elem.genres, elem.popularity, elem.vote_average))
-    #         # movies_df = pd.DataFrame(movies_array, columns=['genres', 'popularity', 'average_rating'])
-    #
-    # genres_dist(recently_watched_df.genres, genres_list)
     get_similarity(previously_watched_movies_df, recently_watched_df, genres_list)
 
 
