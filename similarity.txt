@@ -1,0 +1,1 @@
+math.sqrt(0.001 * math.pow((popularity - popularity), 2) + 0.01 * math.pow((average_rating - average_rating), 2) + math.pow(sum(abs(np.subtract(genres_dist(genres, genres_list), genres_dist(genres, genres_list)))), 2))

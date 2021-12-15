@@ -1,8 +1,12 @@
+import struct
+
 import pandas as pd
 import random
 import requests
 import numpy as np
 import json
+import math
+from bitarray import bitarray
 
 ########################### LIBRARIES ###########################
 
@@ -33,9 +37,13 @@ def filter_values(dataframe):
     print('Filtered movies')
 
 
+def distance_between_vectors(v1, v2):
+    print('hi')
+
+
 def create_rating(file):
     for line in file:
-        line = line.rstrip().replace("NULL", str(random.randint(0, 5)))
+        print(line.rstrip().replace("NULL", str(random.randint(0, 5))))
     print('Rendered rating')
     return file
 
@@ -67,12 +75,86 @@ def get_movie(movieid):
     else:
         raise ValueError('Nie ma takiego id (:')
 
-def get_movies_similarity(dataframe):
-    new = dataframe[['genres', 'popularity', 'vote_average']].copy()
-    print(new)
 
+def get_movie_genres(dataframe):
+    movies = []
+    for elem in dataframe:
+        for genre in elem:
+            movies.insert(int(genre['id']), genre['id'])
+    movies_dict = list(dict.fromkeys(movies))
+
+    return movies_dict
+
+
+def get_similarity(movies_array, movie_to_compare, genres_list):
+    k = 5
+    dist_array = []
+
+    # genres
+    # popularity
+    # average_rating
+
+    for index, elem in movie_to_compare.iterrows():
+        for index, movie_from_array in movies_array.iterrows():
+            dist = math.sqrt(
+                0.001 * math.pow((elem.popularity - movie_from_array.popularity), 2) +
+                0.01 * math.pow((elem.average_rating - movie_from_array.average_rating), 2) +
+                math.pow(sum(
+                            abs(
+                                np.subtract(genres_dist(movie_from_array.genres, genres_list),
+                                            genres_dist(elem.genres, genres_list))
+                                )
+                            ), 2
+                        ))
+            dist_array.append(dist)
+    return dist_array
+
+
+def genres_dist(movie_genres, genres_list):
+    i = 0
+    vector = [0] * len(genres_list)
+    for genre in movie_genres:
+        for genre_from_list in genres_list:
+            if genre_from_list == genre['id']:
+                vector[i] = 1
+                # print('found it')
+                i = 0
+                break
+            i += 1
+
+    return vector
+
+
+def get_recommended_movie(dataframe):
+    print(dataframe.userid)
+
+    
+    # new = dataframe[['genres', 'popularity', 'vote_average']].copy()
+    # genres_list = get_movie_genres(new.genres)
+    # movies_array = []
+    # first_movie = []
+    # i = 0
+    # for index, elem in new.iterrows():
+    #     if i == 0:
+    #         first_movie.append((elem.genres, elem.popularity, elem.vote_average))
+    #         # first_movie.append(elem.genres)
+    #         # first_movie.append(elem.popularity)
+    #         # first_movie.append(elem.vote_average)
+    #         first_movie_df = pd.DataFrame(first_movie, columns=['genres', 'popularity', 'average_rating'])
+    #         i += 1
+    #     else:
+    #         movies_array.append((elem.genres, elem.popularity, elem.vote_average))
+    #         movies_df = pd.DataFrame(movies_array, columns=['genres', 'popularity', 'average_rating'])
+    #
+    # # genres_dist(first_movie_df, genres_list)
+    # get_similarity(movies_df, first_movie_df, genres_list)
+
+
+def get_users_movies(userid):
+    print(userid)
 
 ########################### MAIN ###########################
+
 
 train_columns = ['id', 'userid', 'movieid', 'rating']
 users_db = read_csv("users.csv", train_columns)
@@ -80,6 +162,10 @@ users_db = read_csv("users.csv", train_columns)
 movie_columns = ['id', 'tmdb', 'title']
 movies_db = read_csv("movies.csv", movie_columns)
 
+task_columns = ['id', 'userid', 'movieid', 'rating']
+recommendation_db = read_csv("task.csv", train_columns)
+
+# print(recommendation_db)
 f = open('data.json')
 dictionary = json.load(f)
 
@@ -87,6 +173,5 @@ df = pd.DataFrame.from_dict(dictionary)
 df.sort_values("imdb_id", inplace = True)
 df = df.drop_duplicates(subset=['imdb_id'])
 
-get_movies_similarity(df)
-
-
+for index, new_watched_movie in recommendation_db.iterrows():
+    get_recommended_movie(new_watched_movie)
