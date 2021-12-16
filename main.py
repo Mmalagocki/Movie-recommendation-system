@@ -7,6 +7,7 @@ import numpy as np
 import json
 import math
 from bitarray import bitarray
+from itertools import islice
 
 ########################### LIBRARIES ###########################
 
@@ -37,14 +38,9 @@ def filter_values(dataframe):
     print('Filtered movies')
 
 
-def distance_between_vectors(v1, v2):
-    print('hi')
-
-
-def create_rating(file):
+def create_rating(file, value):
     for line in file:
-        print(line.rstrip().replace("NULL", str(random.randint(0, 5))))
-    print('Rendered rating')
+        print(line.rstrip().replace("NULL", str(value)))
     return file
 
 
@@ -61,6 +57,7 @@ def get_movie_id(movies_tmdb, user_movies):
     test = pd.DataFrame(test, columns=['id', 'userid', 'movieid', 'rating'])
     test.reset_index(inplace=True, drop=True)
     test.to_csv("test.csv", sep=';')
+
 
 def read_csv(name, columns):
     df = pd.read_csv(name, usecols=columns, sep=';')
@@ -90,7 +87,7 @@ def get_movie_genres(dataframe):
 
 
 def get_similarity(movies_array, movie_to_compare, genres_list):
-    k = 5
+    k = 20
     dist_array = []
 
 
@@ -103,15 +100,23 @@ def get_similarity(movies_array, movie_to_compare, genres_list):
             dist = math.sqrt(
                 0.001 * math.pow((elem.popularity - movie_from_array.popularity), 2) +
                 0.01 * math.pow((elem.vote_average - movie_from_array.vote_average), 2) +
-                math.pow(sum(
+                       math.pow(sum(
                             abs(
                                 np.subtract(genres_dist(movie_from_array.genres, genres_list),
                                             genres_dist(elem.genres, genres_list))
                                 )
                             ), 2
                         ))
-            dist_array.append(dist)
-    return dist_array
+            dist_array.append((dist, movie_from_array.rating))
+    dist_array.sort()
+
+    prob_rating = 0
+    for i in range(k):
+        prob_rating += dist_array[i][1]
+    prob_rating = prob_rating/k
+    prob_rating = round(prob_rating)
+
+    return prob_rating
 
 
 def genres_dist(movie_genres, genres_list):
@@ -125,7 +130,7 @@ def genres_dist(movie_genres, genres_list):
                 i = 0
                 break
             i += 1
-    print('done')
+
     return vector
 
 
@@ -165,8 +170,8 @@ def get_recommended_movie(new_watched_movie, users_db, movies_df, movies_genres_
     previously_watched_movies_df = pd.DataFrame(previously_watched_movies, columns=['genres', 'popularity', 'vote_average'])
     previously_watched_movies_df['rating'] = rating_df['rating'].to_numpy()
     genres_list = get_movie_genres(movies_genres_df.genres)
-    get_similarity(previously_watched_movies_df, recently_watched_df, genres_list)
-
+    similarity = get_similarity(previously_watched_movies_df, recently_watched_df, genres_list)
+    return similarity
 
 def get_users_movies_ids(user_id, users_db):
     watched_movies = []
@@ -198,5 +203,10 @@ movies_genres_df = movies_df.copy()
 movies_genres_df.sort_values("imdb_id", inplace = True)
 movies_genres_df = movies_genres_df.drop_duplicates(subset=['imdb_id'])
 
+print(recommendation_db)
 for index, new_watched_movie in recommendation_db.iterrows():
-    get_recommended_movie(new_watched_movie, users_db, movies_df, movies_genres_df)
+    print(index)
+    rating_pred = get_recommended_movie(new_watched_movie, users_db, movies_df, movies_genres_df)
+    new_watched_movie.rating = rating_pred
+
+recommendation_db.to_csv("resultssss.csv", sep=';')
